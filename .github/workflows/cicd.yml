@@ -33,8 +33,6 @@ jobs:
         with:
           name: app
           path: ${{ env.JAR_FILE }}
-      
-
 
   deploy:
     needs: build
@@ -53,7 +51,7 @@ jobs:
         run: |
           scp -i private_key.pem \
           -o StrictHostKeyChecking=no \
-          ${{ env.JAR_FILE }} \
+          build/libs/${{ env.JAR_FILE }} \
           ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER }}/
       - name: Restart Spring Application on EC2
         run: >
@@ -61,7 +59,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
             pgrep java | xargs kill -9
-            nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/${{ env.JAR_FILE }} > app.log 2>&1 &
+            nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/$(basename ${{ env.JAR_FILE }}) > app.log 2>&1 &
           EOF
       - name: Cleanup
         run: rm -f private_key.pem
