@@ -6,7 +6,8 @@ on:
   pull_request:
     branches:
       - main
-
+env:
+  JAR_FILE: spring-github-actions-app-0.0.1-SNAPSHOT.jar
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,17 +24,11 @@ jobs:
         uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: build
-      - name: Set JAR_FILE environment variable
-        id: set_jar_file
-        run: echo "JAR_FILE=$(find build/libs -name '*.jar' -type f -printf '%T@ %p\n' | sort -k 1nr | head -n 1 | cut -d' ' -f2)" >> $GITHUB_ENV
-      - name: Verify JAR_FILE
-        run: echo "JAR file path:${{ env.JAR_FILE }}"
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
           name: app
-          path: ${{ env.JAR_FILE }}
-
+          path: build/libs/${{ env.JAR_FILE }}
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -50,16 +45,16 @@ jobs:
       - name: Copy JAR to EC2
         run: |
           scp -i private_key.pem \
-          -o StrictHostKeyChecking=no \
-          build/libs/${{ env.JAR_FILE }} \
-          ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER }}/
+            -o StrictHostKeyChecking=no \
+            build/libs/${{ env.JAR_FILE }} \
+            ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER }}/
       - name: Restart Spring Application on EC2
         run: >
           ssh -i private_key.pem \
             -o StrictHostKeyChecking=no \
             ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
             pgrep java | xargs kill -9
-            nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/$(basename ${{ env.JAR_FILE }}) > app.log 2>&1 &
+            nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/${{ env.JAR_FILE }} > app.log 2>&1 &
           EOF
       - name: Cleanup
         run: rm -f private_key.pem
