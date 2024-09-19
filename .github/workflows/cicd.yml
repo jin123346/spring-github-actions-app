@@ -24,9 +24,6 @@ jobs:
         uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: build
-      - name: Set JAR_FILE environment variable
-        id: set_jar_file
-        run: echo "JAR_FILE=$(ls build/libs/*.jar)" >> $GITHUB_ENV
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
