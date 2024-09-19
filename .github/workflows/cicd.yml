@@ -25,7 +25,7 @@ jobs:
           arguments: build
       - name: Set JAR_FILE environment variable
         id: set_jar_file
-        run: echo "JAR_FILE=$(ls build/libs/*.jar)" >> $GITHUB_ENV
+        run: echo "JAR_FILE=$(find build/libs -name '*.jar' -type f -printf '%T@ %p\n' | sort -k 1nr | head -n 1 | cut -d' ' -f2)" >> $GITHUB_ENV
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
