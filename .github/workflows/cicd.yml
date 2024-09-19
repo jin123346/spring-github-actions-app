@@ -27,7 +27,7 @@ jobs:
         id: set_jar_file
         run: echo "JAR_FILE=$(find build/libs -name '*.jar' -type f -printf '%T@ %p\n' | sort -k 1nr | head -n 1 | cut -d' ' -f2)" >> $GITHUB_ENV
       - name: Verify JAR_FILE
-        run: echo "JAR file path: $JAR_FILE"
+        run: echo "JAR file path: ${{ env.JAR_FILE }}"
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
